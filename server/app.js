@@ -1,9 +1,12 @@
 import express from "express";
 import requestIp from "request-ip";
-import helmetOptions from "./middleware/global/helemt";
 import hpp from "hpp";
 import compression from "compression";
-import corsOptions from "./middleware/global/cors";
+import cookieParser from "cookie-parser";
+import morgan from "morgan";
+import corsOptions from "./middleware/global/cors.js";
+import helmetOptions from "./middleware/global/helemt.js";
+import rateLimiter from "./middleware/global/rateLimiter.js";
 
 const app = express();
 

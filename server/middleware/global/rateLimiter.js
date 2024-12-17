@@ -1,5 +1,5 @@
 import rateLimit from "express-rate-limit";
-import { ApiError } from "../../utils/ApiError";
+import { ApiError } from "../../utils/ApiError.js";
 
 const rateLimiter = () => {
   return rateLimit({
