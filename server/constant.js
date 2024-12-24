@@ -21,3 +21,4 @@ export const AccountStatusEnum = {
 
 export const RESET_PASSWORD_TOKEN_EXPIRY = 10 * 60 * 1000; // 10 minutes
 export const URL_EXPIRY = 7 * 24 * 60 * 60 * 1000; // 7 days
+export const USER_TEMPORARY_TOKEN_EXPIRY = 20 * 60 * 1000; // 20 minutes

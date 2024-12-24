@@ -13,6 +13,16 @@ const app = express();
 const PORT = process.env.PORT || 8080;
 
 // GLOBAL MIDDELWRE
+
+app.use((err, req, res, next) => {
+  console.log("GLobal Error:" + err.stack);
+  res.status(err.status || 500).json({
+    status: "error",
+    message: err.message || "Internal Server Error",
+    ...(process.env.NODE_ENV === "develeopment" && { stack: err.stack }),
+  });
+});
+
 app.use(corsOptions());
 app.use(requestIp.mw()); // get user Ip
 app.use("/api", rateLimiter()); // Rate limiter to avoid misuse of the service and avoid cost spikes
@@ -31,16 +41,12 @@ app.use(express.json({ limit: "10kb" }));
 app.use(express.urlencoded({ extended: true, limit: "10kb" })); // get data from the url
 app.use(cookieParser());
 
-// GLobal Error Handler
+// api routes
+import healthCheckRoute from "./routes/health.route.js";
+import userRoute from "./routes/user.route.js";
 
-app.use((err, req, res, next) => {
-  console.log(err.stack);
-  res.status(err.status || 500).json({
-    status: "error",
-    message: err.message || "Internal Server Error",
-    ...(process.env.NODE_ENV === "develeopment" && { stack: err.stack }),
-  });
-});
+app.use("/api/v1/healthcheck", healthCheckRoute);
+app.use("/api/v1/users", userRoute);
 
 //  404 route if some thing crashese the server
 app.use((req, res) => {

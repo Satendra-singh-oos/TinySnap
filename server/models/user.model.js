@@ -4,9 +4,11 @@ import crypto from "crypto";
 import {
   AccountStatusEnum,
   RESET_PASSWORD_TOKEN_EXPIRY,
+  USER_TEMPORARY_TOKEN_EXPIRY,
   UserLoginType,
   UserRolesEnum,
 } from "../constant.js";
+import jwt from "jsonwebtoken";
 
 const userSchema = new Schema(
   {
@@ -142,6 +144,27 @@ userSchema.methods.getResetPasswordToken = function () {
 
   this.resetPasswordExpire = Date.now() + RESET_PASSWORD_TOKEN_EXPIRY; // 10 minutes valid
   return resetToken;
+};
+
+// genrate token for email verification
+
+userSchema.methods.generateTemporaryToken = function () {
+  // this token should go to the user email
+  const unHashedToken = crypto.randomBytes(20).toString("hex");
+
+  // this will save in db to comapre at the time of verification
+  const hashedToken = crypto
+    .createHash("sha256")
+    .update(unHashedToken)
+    .digest("hex");
+
+  // This is the expiry time for the token (20 minutes)
+  const tokenExpiry = Date.now() + USER_TEMPORARY_TOKEN_EXPIRY;
+
+  this.emailVerificationToken = hashedToken;
+  this.emailVerificationExpiry = tokenExpiry;
+
+  return { unHashedToken, hashedToken, tokenExpiry };
 };
 
 // Virtual field for total tinyUrl Created
