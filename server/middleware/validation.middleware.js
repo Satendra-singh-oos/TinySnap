@@ -70,3 +70,30 @@ export const validateSingin = validate([
   commonValidations.email,
   commonValidations.password,
 ]);
+
+export const userChangeCurrentPasswordValidator = validate([
+  body("oldPassword").notEmpty().withMessage("Old password is required"),
+  body("newPassword")
+    .notEmpty()
+    .isLength({ min: 8 })
+    .withMessage("Password must be at least 8 characters long")
+    .matches(/^(?=.*\d)(?=.*[a-z])(?=.*[A-Z])(?=.*[!@#$%^&*])/)
+    .withMessage("New password is required"),
+]);
+
+export const userForgotPasswordValidator = validate([commonValidations.email]);
+
+export const userResetForgottenPasswordValidator = validate([
+  commonValidations.password,
+]);
+
+export const userAssignRoleValidator = validate([
+  body("role")
+    .optional()
+    .isIn(AvailableUserRoles)
+    .withMessage("Invalid user role"),
+]);
+
+export const mongoIdPathVariableValidator = validate([
+  param(idName).notEmpty().isMongoId().withMessage(`Invalid ${idName}`),
+]);

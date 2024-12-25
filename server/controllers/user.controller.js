@@ -280,3 +280,132 @@ export const resendEmailVerification = asyncHandler(async (req, res) => {
       )
     );
 });
+
+export const forgotPasswordRequest = asyncHandler(async (req, res) => {
+  const { email } = req.body;
+
+  const user = await User.findOne({ email });
+
+  if (!user) {
+    throw new ApiError(404, "User does not exists", []);
+  }
+
+  // Generate a temporary token
+  const { unHashedToken, hashedToken, tokenExpiry } =
+    user.generateTemporaryToken();
+
+  // send hashedToken and to user email
+
+  const sendEmailToUser = await sendEmail({
+    email: user?.email,
+    subject: "Password Reset Request| By TinySnap",
+    htmlContent: forgatePasswordContentHTML(
+      user?.username,
+      // ! NOTE: Following link should be the link of the frontend page responsible to request password reset
+      // ! Frontend will send the below token with the new password in the request body to the backend reset password endpoint
+      `${process.env.FORGOT_PASSWORD_REDIRECT_URL}/${unHashedToken}`
+    ),
+  });
+
+  // if mail failed to send the user delelte the user from the db and throw error
+  if (
+    !sendEmailToUser.response.complete ||
+    sendEmailToUser.response.statusCode != 201
+  ) {
+    await User.findByIdAndDelete(user._id);
+    return res
+      .status(409)
+      .json(
+        new ApiError(
+          409,
+          "Uanble to Send the verfication mail to the user. Please Try To Register Again"
+        )
+      );
+  }
+
+  return res
+    .status(200)
+    .json(
+      new ApiResponse(
+        200,
+        {},
+        "Password reset mail has been sent on your mail id"
+      )
+    );
+});
+
+export const resetForgottenPassword = asyncHandler(async (req, res) => {
+  const { resetToken } = req.params;
+  const { newPassword } = req.body;
+
+  // Create a hash of the incoming reset token
+
+  let hashedToken = crypto
+    .createHash("sha256")
+    .update(resetToken)
+    .digest("hex");
+
+  // See if user with hash similar to resetToken exists
+  // If yes then check if token expiry is greater than current date
+
+  const user = await User.findOne({
+    forgotPasswordToken: hashedToken,
+    forgotPasswordExpiry: { $gt: Date.now() },
+  });
+
+  // If either of the one is false that means the token is invalid or expired
+  if (!user) {
+    throw new ApiError(489, "Token is invalid or expired");
+  }
+
+  user.password = newPassword;
+
+  await user.save({ validateBeforeSave: false });
+  return res
+    .status(200)
+    .json(new ApiResponse(200, {}, "Password reset successfully"));
+});
+
+export const changeCurrentPassword = asyncHandler(async (req, res) => {
+  const { oldPassword, newPassword } = req.body;
+
+  const user = await User.findById(req.user?._id);
+
+  // check the old password
+  const isPasswordValid = await user.isPasswordCorrect(oldPassword);
+
+  if (!isPasswordValid) {
+    throw new ApiError(400, "Invalid old password");
+  }
+
+  // assign new password in plain text
+  // We have a pre save method attached to user schema which automatically hashes the password whenever added/modified
+  user.password = newPassword;
+  await user.save({ validateBeforeSave: false });
+
+  return res
+    .status(200)
+    .json(new ApiResponse(200, {}, "Password changed successfully"));
+});
+
+export const assignRole = asyncHandler(async (req, res) => {
+  const { userId } = req.params;
+  const { role } = req.body;
+  const user = await User.findById(userId);
+
+  if (!user) {
+    throw new ApiError(404, "User does not exist");
+  }
+  user.role = role;
+  await user.save({ validateBeforeSave: false });
+
+  return res
+    .status(200)
+    .json(new ApiResponse(200, {}, "Role changed for the user"));
+});
+
+export const getCurrentUser = asyncHandler(async (req, res) => {
+  return res
+    .status(200)
+    .json(new ApiResponse(200, req.user, "Current user fetched successfully"));
+});
