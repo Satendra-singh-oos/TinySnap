@@ -12,6 +12,8 @@ export const UserRolesEnum = {
   USER: "USER",
 };
 
+export const AvailableUserRoles = Object.values(UserRolesEnum);
+
 export const AccountStatusEnum = {
   UNVERIFIED: "UNVERIFIED",
   VERIFIED: "VERIFIED",

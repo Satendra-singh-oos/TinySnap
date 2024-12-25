@@ -1,4 +1,8 @@
-import { UserLoginType, UserRolesEnum } from "../constant.js";
+import {
+  AccountStatusEnum,
+  UserLoginType,
+  UserRolesEnum,
+} from "../constant.js";
 import { User } from "../models/user.model.js";
 import { ApiError } from "../utils/ApiError.js";
 import { ApiResponse } from "../utils/ApiResponse.js";
@@ -139,6 +143,7 @@ export const verifyEmail = asyncHandler(async (req, res) => {
   user.emailVerificationExpiry = undefined;
   // Turn the email verified flag to `true`
   user.isEmailVerified = true;
+  user.accountStats = AccountStatusEnum.VERIFIED;
   await user.save({ validateBeforeSave: false });
 
   return res
@@ -234,13 +239,20 @@ export const resendEmailVerification = asyncHandler(async (req, res) => {
       .status(409)
       .json(new ApiError(409, "User Email is already verified", []));
   }
+  console.log(user);
 
   // genrate token for the user to verified the email
+  console.log(user);
 
   const { unHashedToken, hashedToken, tokenExpiry } =
     user.generateTemporaryToken();
 
+  console.log(user);
+
   await user.save({ validateBeforeSave: false });
+
+  const newUser = await User.findById(user._id);
+  console.log(newUser);
 
   // send hashedToken and to user email
 
@@ -408,4 +420,27 @@ export const getCurrentUser = asyncHandler(async (req, res) => {
   return res
     .status(200)
     .json(new ApiResponse(200, req.user, "Current user fetched successfully"));
+});
+
+export const handleSocialLogin = asyncHandler(async (req, res) => {
+  const user = await User.findById(req.user?._id);
+
+  if (!user) {
+    throw new ApiError(404, "User does not exist");
+  }
+
+  const { accessToken } = await generateAccessToken(user._id);
+
+  const options = {
+    httpOnly: true,
+    secure: process.env.NODE_ENV === "production",
+  };
+
+  return res
+    .status(301)
+    .cookie("accessToken", accessToken, options) // set the access token in the cookie
+    .redirect(
+      // redirect user to the frontend with access  token in case user is not using cookies
+      `${process.env.CLIENT_SSO_REDIRECT_URL}?accessToken=${accessToken}`
+    );
 });

@@ -1,5 +1,6 @@
 import { body, param, query, validationResult } from "express-validator";
 import { ApiError } from "../utils/ApiError.js";
+import { AvailableUserRoles } from "../constant.js";
 
 export const validate = (validations) => {
   return async (req, res, next) => {
@@ -94,6 +95,8 @@ export const userAssignRoleValidator = validate([
     .withMessage("Invalid user role"),
 ]);
 
-export const mongoIdPathVariableValidator = validate([
-  param(idName).notEmpty().isMongoId().withMessage(`Invalid ${idName}`),
-]);
+export const mongoIdPathVariableValidator = (idName) => {
+  return [
+    param(idName).notEmpty().isMongoId().withMessage(`Invalid ${idName}`),
+  ];
+};
