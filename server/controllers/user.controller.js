@@ -239,20 +239,15 @@ export const resendEmailVerification = asyncHandler(async (req, res) => {
       .status(409)
       .json(new ApiError(409, "User Email is already verified", []));
   }
-  console.log(user);
 
   // genrate token for the user to verified the email
-  console.log(user);
 
   const { unHashedToken, hashedToken, tokenExpiry } =
     user.generateTemporaryToken();
 
-  console.log(user);
-
   await user.save({ validateBeforeSave: false });
 
   const newUser = await User.findById(user._id);
-  console.log(newUser);
 
   // send hashedToken and to user email
 

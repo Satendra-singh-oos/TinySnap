@@ -16,7 +16,7 @@ const app = express();
 // GLOBAL MIDDELWRE
 
 app.use((err, req, res, next) => {
-  console.log("GLobal Error:" + err.stack);
+  console.log("Global Error:" + err.stack);
   res.status(err.status || 500).json({
     status: "error",
     message: err.message || "Internal Server Error",
