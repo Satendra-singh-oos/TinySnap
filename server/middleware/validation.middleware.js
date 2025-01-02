@@ -100,3 +100,21 @@ export const mongoIdPathVariableValidator = (idName) => {
     param(idName).notEmpty().isMongoId().withMessage(`Invalid ${idName}`),
   ];
 };
+
+export const createTinyUrlValidator = validate([
+  body("shortName")
+    .isLength({ min: 0, max: 8 })
+    .matches(/^[a-zA-Z][a-zA-Z0-9-_]{2,7}$/)
+    .withMessage("Short name must be at most 8 characters long"),
+
+  body("originalUrl")
+    .matches(
+      /[(http(s)?):\/\/(www\.)?a-zA-Z0-9@:%._\+~#=]{2,256}\.[a-z]{2,6}\b([-a-zA-Z0-9@:%_\+.~#?&//=]*)/
+    )
+    .withMessage("Invalid URL"),
+
+  body("urlValidity")
+    .optional({ checkFalsy: true })
+    .isISO8601()
+    .withMessage("Invalid date format"),
+]);

@@ -56,9 +56,11 @@ app.use(passport.session()); // persistent login sessions
 // api routes
 import healthCheckRoute from "./routes/health.route.js";
 import userRoute from "./routes/user.route.js";
+import tinyUrlRoute from "./routes/tinyUrl.route.js";
 
 app.use("/api/v1/healthcheck", healthCheckRoute);
 app.use("/api/v1/users", userRoute);
+app.use("/api/v1/tinyurl", tinyUrlRoute);
 
 //  404 route if some thing crashese the server
 app.use((req, res) => {

@@ -1,5 +1,5 @@
 import mongoose, { Schema } from "mongoose";
-import { URL_EXPIRY } from "../constant";
+import { DEFAULT_URL_EXPIRY } from "../constant.js";
 
 const tinyUrlSchema = await Schema(
   {
@@ -9,6 +9,7 @@ const tinyUrlSchema = await Schema(
       maxLength: [50, "Short Name can't be more then 50 characters"],
       requried: [true, "Original url required"],
       trim: true,
+      unique: true,
     },
 
     originalUrl: {
@@ -25,7 +26,7 @@ const tinyUrlSchema = await Schema(
 
     urlValidity: {
       type: Date,
-      default: Date.now() + URL_EXPIRY,
+      default: Date.now() + DEFAULT_URL_EXPIRY,
     },
 
     isActive: {
